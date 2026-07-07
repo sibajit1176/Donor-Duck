@@ -1,0 +1,48 @@
+const authService = require('../services/auth.service')
+
+const registerController =async (req, res, next) => {
+    try {
+        const createuser =await authService.registerService(req.body)
+        res.status(201).send(createuser)
+    } catch (error) {
+        next(error)
+    }
+}
+
+const logincontroller=async(req,res,next)=>{
+    try {
+        const result=await authService.loggingService(req.body)
+        res.cookie("refreshToken",result.refreshtoken,{
+            httpOnly:true,
+            secure:process.env.NODE_ENV === "production",
+            sameSite:"strict",
+            maxAge:7*24*60*60*1000
+        })
+        res.status(200).json({
+            success: true,
+            message: result.message,
+            accessToken: result.accesstoken,
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+const refreshTokenController=async(req,res,next)=>{
+    try {
+        const refreshToken=req.cookies.refreshToken
+        const result=await authService.refreshTokenService(refreshToken)
+         res.status(200).json({
+            success: true,
+            message: "Access token refreshed successfully",
+            accessToken: result.accessToken,
+        });
+    } catch (error) {
+        next(error)
+    }
+}
+
+module.exports={
+    registerController,
+    logincontroller,
+    refreshTokenController
+}
