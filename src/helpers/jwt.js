@@ -7,7 +7,7 @@ const generateAccessToken = (payload) => {
 }
 
 const generaterefreshtoken=(payload)=>{
-    return jwt.sign(payload,process.env.jwt.JWT_REFRESH_SECRET,{
+    return jwt.sign(payload,process.env.JWT_REFRESH_SECRET,{
         expiresIn:"7d"
     })
 }
@@ -15,9 +15,13 @@ const generaterefreshtoken=(payload)=>{
 const verifyRefreshToken=(payload)=>{
     return jwt.verify(payload,process.env.JWT_REFRESH_SECRET)
 }
+const verifyAccessToken=(payload)=>{
+    return jwt.verify(payload,process.env.JWT_SECRET)
+}
 
 module.exports={
     generateAccessToken,
     generaterefreshtoken,
-    verifyRefreshToken
+    verifyRefreshToken,
+    verifyAccessToken
 }

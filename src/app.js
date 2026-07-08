@@ -2,6 +2,7 @@ const express=require('express')
 const errmiddleware=require('./middlewares/errormiddleware')
 const cookieParser=require('cookie-parser')
 const authroute=require('./routes/auth.route')
+const charityroute=require('./routes/charity.route')
 
 
 const app=express()
@@ -9,7 +10,9 @@ const app=express()
 app.use(express.json())
 app.use(cookieParser())
 
-app.use('/auth/api',authroute)
+app.use('/api/auth',authroute)
+app.use('/api/charities',charityroute)
+
 
 app.use((req,res,next)=>{
     const err=new Error("Page not found")
