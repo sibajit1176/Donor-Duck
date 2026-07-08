@@ -1,5 +1,7 @@
 const User=require('./user')
-const Charity=require('./charity')
+const Charity=require('./charity');
+const CharityProject = require('./charityProject');
+const Donation = require('./donationhitoryTable');
 
 User.hasOne(Charity, {
     foreignKey: "userId",
@@ -19,4 +21,18 @@ Charity.hasMany(CharityProject, {
 CharityProject.belongsTo(Charity, {
     foreignKey: "charityId",
     as: "charity",
+});
+Donation.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+Donation.belongsTo(Charity, {
+    foreignKey: "charityId",
+    as: "charity",
+});
+
+Donation.belongsTo(CharityProject, {
+    foreignKey: "projectId",
+    as: "project",
 });
