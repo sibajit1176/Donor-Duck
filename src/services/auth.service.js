@@ -3,7 +3,7 @@ const User = require("../models/user")
 const bcrypt = require('bcrypt')
 
 const registerService = async (userDetails) => {
-    const { name, email, password, phone } = userDetails
+    const { name, email, password } = userDetails
     const userExist = await User.findOne({
         where: {
             email
@@ -20,7 +20,6 @@ const registerService = async (userDetails) => {
         name,
         email,
         password: hashpassword,
-        phone
     })
     return {
         message: `${createUser.name} registered successfully`,
@@ -94,8 +93,80 @@ const refreshTokenService = async (refToken) => {
     }
 }
 
+const logoutService = async () => {
+    return {
+        message: "Logout successful."
+    };
+};
+
+const getProfileDetailsService = async (payload) => {
+    const { userId } = payload;
+
+    const user = await User.findByPk(userId, {
+        attributes: {
+            exclude: ["password","status"],
+        },
+    });
+
+    if (!user) {
+        const err = new Error("User not found.");
+        err.statusCode = 404;
+        throw err;
+    }
+
+    return {
+        message: "Profile fetched successfully.",
+        data: user,
+    };
+};
+const editProfileDetailsService = async (payload) => {
+    const { userId, name, email, phone, profileImage } = payload;
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        const err = new Error("User not found.");
+        err.statusCode = 404;
+        throw err;
+    }
+
+    // Check if email already exists for another user
+    if (email && email !== user.email) {
+        const emailExists = await User.findOne({
+            where: { email },
+        });
+
+        if (emailExists) {
+            const err = new Error("Email already exists.");
+            err.statusCode = 409;
+            throw err;
+        }
+    }
+
+    await user.update({
+        name,
+        email,
+        phone,
+        profileImage,
+    });
+
+    return {
+        message: "Profile updated successfully.",
+    //     data: {
+    //         id: user.id,
+    //         name: user.name,
+    //         email: user.email,
+    //         phone: user.phone,
+    //         profileImage: user.profileImage,
+    //         role: user.role,
+    //     },
+     };
+};
 module.exports = {
     registerService,
     loggingService,
-    refreshTokenService
+    refreshTokenService,
+    logoutService,
+    getProfileDetailsService,
+    editProfileDetailsService
 }

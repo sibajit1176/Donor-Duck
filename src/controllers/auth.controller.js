@@ -40,9 +40,54 @@ const refreshTokenController=async(req,res,next)=>{
         next(error)
     }
 }
+const logoutController = async (req, res, next) => {
+    try {
+
+        await authService.logoutService();
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Logout successful.",
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+const getProfileDetailsController = async (req, res, next) => {
+    try {
+        const result = await authService.getProfileDetailsService({
+            userId: req.user.id,
+        });
+
+        return res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+const editProfileDetailsController = async (req, res, next) => {
+    try {
+        const result = await authService.editProfileDetailsService({
+            userId: req.user.id,
+        });
+
+        return res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+};
 
 module.exports={
     registerController,
     logincontroller,
-    refreshTokenController
+    refreshTokenController,
+    logoutController,
+    getProfileDetailsController,
+    editProfileDetailsController
 }
