@@ -1,6 +1,8 @@
 const { generateAccessToken, generaterefreshtoken, verifyRefreshToken } = require("../helpers/jwt")
+const Donation = require("../models/donationhitoryTable")
 const User = require("../models/user")
 const bcrypt = require('bcrypt')
+const { fn, col } = require("sequelize");
 
 const registerService = async (userDetails) => {
     const { name, email, password } = userDetails
@@ -88,6 +90,7 @@ const refreshTokenService = async (refToken) => {
         role: user.role
     }
     const accessstoken = generateAccessToken(payload)
+
     return {
         accessstoken
     }
@@ -104,7 +107,7 @@ const getProfileDetailsService = async (payload) => {
 
     const user = await User.findByPk(userId, {
         attributes: {
-            exclude: ["password","status"],
+            exclude: ["password", "status"],
         },
     });
 
@@ -113,14 +116,26 @@ const getProfileDetailsService = async (payload) => {
         err.statusCode = 404;
         throw err;
     }
-
+    const donationStats = await Donation.findOne({
+        where: {
+            userId,
+        },
+        attributes: [
+            [fn("COALESCE", fn("SUM", col("amount")), 0), "totalAmount"],
+            [fn("COUNT", col("id")), "totalDonations"],
+            [fn("COUNT", fn("DISTINCT", col("charityId"))), "totalCharities"],
+            [fn("COUNT", fn("DISTINCT", col("projectId"))), "totalProjects"],
+        ],
+        raw: true,
+    });
     return {
         message: "Profile fetched successfully.",
-        data: user,
+        user,
+        donationStats
     };
 };
 const editProfileDetailsService = async (payload) => {
-    const { userId, name, email, phone, profileImage } = payload;
+    const { userId, name, email, phone, address,city,state,country,linkedInProfile,twiterProfile } = payload;
 
     const user = await User.findByPk(userId);
 
@@ -143,24 +158,22 @@ const editProfileDetailsService = async (payload) => {
         }
     }
 
-    await user.update({
+   const result = await user.update({
         name,
         email,
         phone,
-        profileImage,
+        twiterProfile,
+        linkedInProfile,
+        country,
+        state,
+        city,
+        address
     });
 
     return {
         message: "Profile updated successfully.",
-    //     data: {
-    //         id: user.id,
-    //         name: user.name,
-    //         email: user.email,
-    //         phone: user.phone,
-    //         profileImage: user.profileImage,
-    //         role: user.role,
-    //     },
-     };
+        updatedData:result
+    };
 };
 module.exports = {
     registerService,

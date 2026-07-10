@@ -34,7 +34,7 @@ const refreshTokenController=async(req,res,next)=>{
          res.status(200).json({
             success: true,
             message: "Access token refreshed successfully",
-            accessToken: result.accessToken,
+            accessToken: result.accessstoken,
         });
     } catch (error) {
         next(error)
@@ -74,7 +74,7 @@ const getProfileDetailsController = async (req, res, next) => {
 const editProfileDetailsController = async (req, res, next) => {
     try {
         const result = await authService.editProfileDetailsService({
-            userId: req.user.id,
+            userId: req.user.id,...req.body
         });
 
         return res.status(200).json(result);
