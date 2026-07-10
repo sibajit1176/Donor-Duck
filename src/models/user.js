@@ -48,6 +48,34 @@ const User = sequelize.define('user', {
         type: DataTypes.ENUM("ACTIVE", "BLOCKED"),
         defaultValue: "ACTIVE"
     },
+    address: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+
+    city: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+
+    state: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+
+    country: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    linkedInProfile: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    twiterProfile: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+
 },
     {
         timestamps: true,
@@ -56,4 +84,4 @@ const User = sequelize.define('user', {
     }
 )
 
-module.exports=User
+module.exports = User

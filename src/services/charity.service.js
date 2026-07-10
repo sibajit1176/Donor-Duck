@@ -7,20 +7,10 @@ const registercharityService = async (payload) => {
         organizationName,
         registrationNumber,
         description,
-        mission,
-        vision,
         category,
         website,
-        email,
-        phone,
-        address,
-        city,
-        state,
-        country,
         logo,
-        coverImage,
-        goalAmount
-    } = payload;
+        } = payload;
 
     const charityExist = await Charity.findOne({
         where: {
@@ -44,24 +34,13 @@ const registercharityService = async (payload) => {
     }
 
     const charitycreate = await Charity.create({
-        userId,
+       userId,
         organizationName,
         registrationNumber,
         description,
-        mission,
-        vision,
         category,
         website,
-        email,
-        phone,
-        address,
-        city,
-        state,
-        country,
         logo,
-        coverImage,
-        goalAmount: goalAmount || 0,
-        currentAmount: 0,
         approvalStatus: "PENDING"
     });
     return {
