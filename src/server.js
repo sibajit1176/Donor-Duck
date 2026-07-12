@@ -1,4 +1,5 @@
 require('dotenv').config()
+require('../src/models/index')
 const sequelize = require('./config/database')
 const app = require('./app')
 
@@ -9,7 +10,7 @@ const startServer = async () => {
     try {
         await sequelize.authenticate()
         console.log("Database conected");
-        await sequelize.sync({alter:true})
+        await sequelize.sync()
 
         app.listen(port, (req, res) => {
             console.log(`Server run on ${port}`);

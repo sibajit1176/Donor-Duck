@@ -4,7 +4,10 @@ const authMiddleware = require('../middlewares/auth.middleware')
 
 route.post('/registerCharity',authMiddleware,charityController.registercharityControler)
 route.get('/getcharityProfile',authMiddleware,charityController.getcharityprofileController)
-route.get('/editcharityProfile',authMiddleware,charityController.editcharityprofileController)
+route.post('/editcharityProfile',authMiddleware,charityController.editcharityprofileController)
 route.get('/deletecharityProfile',authMiddleware,charityController.deletecharityprofileController)
+route.get('/getAllCharity',charityController.getAllCharityController)
+route.get('/getcharityProfileAllDetails',authMiddleware,charityController.getCharityProfilfullDetailseController)
+
 
 module.exports=route

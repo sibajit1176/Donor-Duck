@@ -43,9 +43,32 @@ const deletecharityprofileController = async (req, res, next) => {
         next(error)
     }
 }
+
+const getAllCharityController = async (req, res, next) => {
+    try {
+        const response = await charityService.getAllCharityService()
+        res.status(200).send(response)
+    } catch (error) {
+        next(error)
+    }
+
+}
+
+const getCharityProfilfullDetailseController = async (req, res, next) => {
+    try {
+
+        const charity = await charityService.getCharityProfilfullDetailseService(req.user.id)
+        res.status(200).send(charity)
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
     registercharityControler,
     getcharityprofileController,
     editcharityprofileController,
-    deletecharityprofileController
+    deletecharityprofileController,
+    getAllCharityController,
+    getCharityProfilfullDetailseController
 }
