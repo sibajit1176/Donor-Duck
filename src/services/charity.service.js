@@ -1,5 +1,9 @@
 const Charity = require("../models/charity");
+const CharityProject = require("../models/charityProject");
+const Donation = require("../models/donationhitoryTable");
 const User = require("../models/user");
+const { fn, col,literal } = require("sequelize");
+
 
 const registercharityService = async (payload) => {
     const {
@@ -54,6 +58,7 @@ const getCharityProfileService = async (userId) => {
         include: [
             {
                 model: User,
+                as: "user",
                 attributes: ["id", "name", "email"]
             }
         ],
@@ -113,8 +118,6 @@ const editCharityProfileService = async (payload) => {
     };
 };
 
-
-
 const deleteCharityProfileService = async (userId) => {
     const charityProfile = await Charity.findOne({
         where: { userId },
@@ -133,9 +136,171 @@ const deleteCharityProfileService = async (userId) => {
     };
 };
 
+const getAllCharityService = async () => {
+    const charities = await Charity.findAll({
+        where: {
+            approvalStatus: "APPROVED",
+        },
+        attributes: [
+            "id",
+            "organizationName",
+            "category",
+            "description",
+            [
+                fn("COUNT", col("projects.id")),
+                "totalProjects",
+            ],
+        ],
+        include: [
+            {
+                model: CharityProject,
+                as: "projects",
+                attributes: [],
+                required: false,
+            },
+        ],
+        group: ["Charity.id"],
+        order: [["createdAt", "DESC"]],
+    });
+
+    return {
+        message: "Charities fetched successfully.",
+        charities,
+    };
+};
+
+const getCharityProfilfullDetailseService = async (userId) => {
+
+    const charity = await Charity.findOne({
+        where: { userId },
+        include: [
+            {
+                model: User,
+                as: "user",
+                attributes: ["id", "name", "email"],
+            },
+        ],
+    });
+
+    if (!charity) {
+        const err = new Error("Charity profile not found.");
+        err.statusCode = 404;
+        throw err;
+    }
+
+    const charityId = charity.id;
+
+    const [stats, projects, donations] = await Promise.all([
+
+        // ---------- Statistics ----------
+        Promise.all([
+
+            CharityProject.count({
+                where: {
+                    charityId,
+                },
+            }),
+
+            CharityProject.count({
+                where: {
+                    charityId,
+                    status: "ACTIVE",
+                },
+            }),
+
+            CharityProject.count({
+                where: {
+                    charityId,
+                    status: "COMPLETED",
+                },
+            }),
+
+            Donation.findOne({
+                where: {
+                    charityId,
+                },
+                attributes: [
+                    [
+                        fn("COUNT", col("id")),
+                        "totalDonations",
+                    ],
+                    [
+                        fn(
+                            "COALESCE",
+                            fn("SUM", col("amount")),
+                            0
+                        ),
+                        "totalRaised",
+                    ],
+                ],
+                raw: true,
+            }),
+
+        ]),
+
+        // ---------- Projects ----------
+        CharityProject.findAll({
+            where: {
+                charityId,
+            },
+            order: [["createdAt", "DESC"]],
+        }),
+
+        // ---------- Donations ----------
+        Donation.findAll({
+            where: {
+                charityId,
+            },
+            include: [
+                {
+                    model: User,
+                    as: "user",
+                    attributes: ["id", "name", "email"],
+                },
+                {
+                    model: CharityProject,
+                    as: "project",
+                    attributes: ["id", "title"],
+                },
+            ],
+            order: [["createdAt", "DESC"]],
+        }),
+
+    ]);
+
+    const [
+        totalProjects,
+        activeProjects,
+        completedProjects,
+        donationStats,
+    ] = stats;
+
+    return {
+        message: "Charity profile fetched successfully.",
+
+        charity,
+
+        stats: {
+            totalProjects,
+            activeProjects,
+            completedProjects,
+            totalDonations: Number(donationStats.totalDonations),
+            totalRaised: Number(donationStats.totalRaised),
+        },
+
+        projects,
+
+        donations,
+    };
+
+};
+
+
 module.exports = {
     registercharityService,
     getCharityProfileService,
     editCharityProfileService,
-    deleteCharityProfileService
+    deleteCharityProfileService,
+    getAllCharityService,
+    getCharityProfilfullDetailseService
 }
