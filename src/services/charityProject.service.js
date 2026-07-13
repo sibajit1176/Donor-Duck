@@ -1,5 +1,8 @@
 const Charity = require("../models/charity")
-const CharityProject = require("../models/charityProject")
+const CharityProject = require("../models/charityProject");
+const Donation = require("../models/donationhitoryTable");
+const User = require("../models/user");
+const {Op}=require('sequelize')
 
 
 const createcharityProjectService = async (payload) => {
@@ -59,7 +62,6 @@ const editCharityProjectService = async (payload) => {
         goalAmount,
         startDate,
         endDate,
-        coverImage,
         status,
     } = payload;
 
@@ -86,27 +88,35 @@ const editCharityProjectService = async (payload) => {
         throw err;
     }
 
-    await project.update({
+   const result= await project.update({
         title,
         description,
         category,
         goalAmount,
         startDate,
         endDate,
-        coverImage,
         status,
     });
 
     return {
         message: "Project updated successfully.",
-        data: project,
+        result,
+        payload
     };
 };
 
-const getCharityProjectbyIdService = async (payload) => {
-    const {userId,projectId}=payload
-     const charity = await Charity.findOne({
+const getCharityProjectbyIdService = async ({ userId, projectId }) => {
+
+    const charity = await Charity.findOne({
         where: { userId },
+        attributes: [
+            "id",
+            "organizationName",
+            "registrationNumber",
+            "email",
+            "phone",
+            "website",
+        ],
     });
 
     if (!charity) {
@@ -114,12 +124,28 @@ const getCharityProjectbyIdService = async (payload) => {
         err.statusCode = 404;
         throw err;
     }
-    
+
     const project = await CharityProject.findOne({
         where: {
             id: projectId,
             charityId: charity.id,
         },
+        attributes: [
+            "id",
+            "title",
+            "description",
+            "category",
+            "goalAmount",
+            "raisedAmount",
+            "totalDonors",
+            "startDate",
+            "endDate",
+            "status",
+            "isFeatured",
+            "coverImage",
+            "createdAt",
+            "updatedAt",
+        ],
     });
 
     if (!project) {
@@ -127,10 +153,36 @@ const getCharityProjectbyIdService = async (payload) => {
         err.statusCode = 404;
         throw err;
     }
+
+    const donationHistory = await Donation.findAll({
+        where: {
+            projectId,
+            status: "SUCCESS",
+        },
+        attributes: [
+            "id",
+            "amount",
+            "message",
+            "isAnonymous",
+            "createdAt",
+        ],
+        include: [
+            {
+                model: User,
+                as:"user",
+                attributes: ["name"],
+            },
+        ],
+        order: [["createdAt", "DESC"]],
+    });
+
     return {
-        message: "Project get successfully.",
-        data: project,
+        message: "Project fetched successfully.",
+        project,
+        charity,
+        donationHistory,
     };
+
 };
 
 const getAllCharityProjectService = async (payload) => {
@@ -191,10 +243,48 @@ const deleteCharityProjectbyIdService = async (payload) => {
         message: "Project deleted successfully.",
     };
 };
+
+const getAllProjectsService = async () => {
+    const projects = await CharityProject.findAll({
+        where: {
+            status: {
+                [Op.ne]: "CANCELLED",
+            },
+        },
+        attributes: [
+            "id",
+            "title",
+            "description",
+            "category",
+            "coverImage",
+            "totalDonors",
+            "goalAmount",
+        ],
+        include: [
+            {
+                model: Charity,
+                as:"charity",
+                attributes: [
+                    "id",
+                    "organizationName",
+                    "logo",
+                ],
+            },
+        ],
+        order: [["createdAt", "DESC"]],
+    });
+
+    return {
+        message: "Projects fetched successfully.",
+        projects,
+    };
+};
+
 module.exports={
     createcharityProjectService,
     editCharityProjectService,
     getAllCharityProjectService,
     getCharityProjectbyIdService,
-    deleteCharityProjectbyIdService
+    deleteCharityProjectbyIdService,
+    getAllProjectsService
 }
