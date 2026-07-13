@@ -10,15 +10,23 @@ const createPaymentcontroller=async(req,res,next)=>{
     }
 }
 
-const verifyPaymentcontroller=async(req,res,next)=>{
+const verifyPaymentcontroller = async (req, res, next) => {
     try {
-        const userId=req.user.id
-        const result=await donationService.verifyPaymentService(req.body)
-        res.status(201).send(result)
+
+        const { order_id } = req.params;
+
+        const result = await donationService.verifyPaymentService({
+            orderId: order_id,
+        });
+
+        res.status(200).json(result);
+
     } catch (error) {
-        next(error)
+
+        next(error);
+
     }
-}
+};
 
 const getUserPaymentController=async(req,res,next)=>{
     try {

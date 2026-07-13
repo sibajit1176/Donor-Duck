@@ -15,8 +15,8 @@ const createProjectController = async (req, res, next) => {
 
 const editProjectController = async (req, res, next) => {
     try {
-        const userId=req.user.id
-        const result = await charityProjectService.editCharityProjectService({userId,...req.body});
+        const userId = req.user.id
+        const result = await charityProjectService.editCharityProjectService({ userId, ...req.body });
         return res.status(200).json(result);
     } catch (error) {
         next(error);
@@ -24,9 +24,9 @@ const editProjectController = async (req, res, next) => {
 };
 const getProjectByIdController = async (req, res, next) => {
     try {
-        const userId=req.user.id
-         const { projectId } = req.params;
-        const result = await charityProjectService.getCharityProjectbyIdService({userId,projectId});
+        const userId = req.user.id
+        const { projectId } = req.params;
+        const result = await charityProjectService.getCharityProjectbyIdService({ userId, projectId });
         return res.status(200).json(result);
     } catch (error) {
         next(error);
@@ -35,9 +35,9 @@ const getProjectByIdController = async (req, res, next) => {
 
 const deleteProjectByIdController = async (req, res, next) => {
     try {
-        const userId=req.user.id
-         const { projectId } = req.params;
-        const result = await charityProjectService.deleteCharityProjectbyIdService({userId,projectId});
+        const userId = req.user.id
+        const { projectId } = req.params;
+        const result = await charityProjectService.deleteCharityProjectbyIdService({ userId, projectId });
         return res.status(200).json(result);
     } catch (error) {
         next(error);
@@ -46,18 +46,29 @@ const deleteProjectByIdController = async (req, res, next) => {
 
 const getAllProjectController = async (req, res, next) => {
     try {
-        const userId=req.user.id        
-        const result = await charityProjectService.getAllCharityProjectService({userId});
+        const userId = req.user.id
+        const result = await charityProjectService.getAllCharityProjectService({ userId });
         return res.status(200).json(result);
     } catch (error) {
         next(error);
     }
 };
 
+const getDataForProjectpage = async (req, res, next) => {
+    try {
+        const result = await charityProjectService.getAllProjectsService()
+        return res.status(200).json(result);
+
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     createProjectController,
     editProjectController,
     getAllProjectController,
     getProjectByIdController,
-    deleteProjectByIdController
+    deleteProjectByIdController,
+    getDataForProjectpage
 };

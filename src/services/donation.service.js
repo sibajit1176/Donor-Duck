@@ -37,7 +37,6 @@ const createDonationService = async (payload) => {
             where: {
                 id: projectId,
                 charityId,
-                status: "ACTIVE",
             },
         });
 
@@ -47,6 +46,8 @@ const createDonationService = async (payload) => {
             throw err;
         }
         const orderId = `ORDER_${Date.now()}_${userId.slice(0, 8)}`;
+        console.log(orderId);
+
         await Donation.create(
             {
                 orderId,
@@ -73,7 +74,7 @@ const createDonationService = async (payload) => {
             },
             order_meta: {
                 return_url:
-                    "http://localhost:3000/payment-success?order_id={order_id}",
+                    "http://localhost:5173/paymentStatus/{order_id}",
             },
             order_expiry_time: expiryDate.toISOString(),
         };
@@ -94,7 +95,7 @@ const createDonationService = async (payload) => {
 };
 
 const verifyPaymentService = async (payload) => {
-    const { orderId } = payload;
+    const {orderId } = payload;
 
     const transaction = await sequelize.transaction();
 
@@ -103,6 +104,23 @@ const verifyPaymentService = async (payload) => {
             where: {
                 orderId,
             },
+            include: [
+                {
+                    model: CharityProject,
+                    as: "project",
+                    attributes: ["title"],
+                },
+                {
+                    model: Charity,
+                    as: "charity",
+                    attributes: ["organizationName"],
+                },
+                {
+                    model: User,
+                    as: "user",
+                    attributes: ["name"],
+                },
+            ],
             transaction,
         });
 
@@ -178,6 +196,16 @@ const verifyPaymentService = async (payload) => {
         return {
             success: true,
             message: "Payment verified successfully.",
+            payment: {
+                status: donation.status,
+                orderId: donation.orderId,
+                amount: donation.amount,
+                message: donation.message,
+                createdAt: donation.createdAt,
+                projectTitle: donation.project.title,
+                organizationName: donation.charity.organizationName,
+                donorName: donation.user.name,
+            },
         };
     } catch (error) {
         await transaction.rollback();

@@ -9,7 +9,7 @@ const Donation = sequelize.define(
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-        orederId:{
+        orderId:{
             type:DataTypes.STRING,
             allowNull:false
         },

@@ -218,6 +218,7 @@ const getCharityProfilfullDetailseService = async (userId) => {
             Donation.findOne({
                 where: {
                     charityId,
+                    status:"SUCCESS"
                 },
                 attributes: [
                     [
@@ -250,6 +251,7 @@ const getCharityProfilfullDetailseService = async (userId) => {
         Donation.findAll({
             where: {
                 charityId,
+                status:"SUCCESS"
             },
             include: [
                 {
