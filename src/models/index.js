@@ -36,3 +36,13 @@ Donation.belongsTo(CharityProject, {
     foreignKey: "projectId",
     as: "project",
 });
+
+Charity.belongsTo(User, {
+    foreignKey: "approvedBy",
+    as: "approver",
+});
+
+User.hasMany(Charity, {
+    foreignKey: "approvedBy",
+    as: "approvedCharities",
+});

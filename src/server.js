@@ -1,7 +1,6 @@
 require('dotenv').config()
 require('../src/models/index')
 const sequelize = require('./config/database')
-const cashfree=require('./config/cashfree')
 const app = require('./app')
 
 const port = process.env.PORT||8001

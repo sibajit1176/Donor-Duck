@@ -1,11 +1,11 @@
-const charitymiddleware=(req,res,next)=>{
+const adminmiddleware=(req,res,next)=>{
     try {
        if (!req.user) {
             const err = new Error("Unauthorized");
             err.statusCode = 401;
             return next(err);
         }
-        if(req.user.role!='CHARITY' || req.user.role!='ADMIN'){
+        if(req.user.role!='ADMIN'){
             const err=new Error("Forbidden: You do not have permission to access this resource.")
             err.statusCode=403
             return next(err);
@@ -17,4 +17,4 @@ const charitymiddleware=(req,res,next)=>{
     }
 }
 
-module.exports=charitymiddleware
+module.exports=adminmiddleware

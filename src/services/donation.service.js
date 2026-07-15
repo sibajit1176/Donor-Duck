@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const cashfree = require("../config/cashfree");
 const sequelize = require("../config/database");
 const Charity = require("../models/charity");
@@ -46,7 +47,6 @@ const createDonationService = async (payload) => {
             throw err;
         }
         const orderId = `ORDER_${Date.now()}_${userId.slice(0, 8)}`;
-        console.log(orderId);
 
         await Donation.create(
             {
@@ -70,7 +70,7 @@ const createDonationService = async (payload) => {
             order_currency: "INR",
             customer_details: {
                 customer_id: user.id,
-                customer_phone: user.phone,
+                customer_phone: user.phone?.trim() || "9933702145",
             },
             order_meta: {
                 return_url:
@@ -95,7 +95,7 @@ const createDonationService = async (payload) => {
 };
 
 const verifyPaymentService = async (payload) => {
-    const {orderId } = payload;
+    const { orderId } = payload;
 
     const transaction = await sequelize.transaction();
 
@@ -103,6 +103,7 @@ const verifyPaymentService = async (payload) => {
         const donation = await Donation.findOne({
             where: {
                 orderId,
+                
             },
             include: [
                 {
@@ -156,40 +157,44 @@ const verifyPaymentService = async (payload) => {
             };
         }
 
-        await donation.update(
-            {
-                status: "SUCCESS",
-            },
-            { transaction }
-        );
+        if (donation.status === "PENDING") {
+            await donation.update(
+                {
+                    status: "SUCCESS",
+                },
+                { transaction }
+            );
+            const project = await CharityProject.findByPk(
+                donation.projectId,
+                { transaction }
+            );
 
-        const project = await CharityProject.findByPk(
-            donation.projectId,
-            { transaction }
-        );
+            await project.update(
+                {
+                    raisedAmount:
+                        Number(project.raisedAmount) +
+                        Number(donation.amount),
+                    totalDonors: Number(project.totalDonors) + 1
+                },
+                { transaction }
+            );
+            const charity = await Charity.findByPk(
+                donation.charityId,
+                { transaction }
+            );
 
-        await project.update(
-            {
-                raisedAmount:
-                    Number(project.raisedAmount) +
-                    Number(donation.amount),
-                totalDonors: Number(project.totalDonors) + 1
-            },
-            { transaction }
-        );
-        const charity = await Charity.findByPk(
-            donation.charityId,
-            { transaction }
-        );
 
-        await charity.update(
-            {
-                currentAmount:
-                    Number(charity.currentAmount) +
-                    Number(donation.amount),
-            },
-            { transaction }
-        );
+
+            await charity.update(
+                {
+                    currentAmount:
+                        Number(charity.currentAmount) +
+                        Number(donation.amount),
+                },
+                { transaction }
+            );
+        }
+
 
         await transaction.commit();
 

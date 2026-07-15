@@ -5,6 +5,7 @@ const authroute=require('./routes/auth.route')
 const charityroute=require('./routes/charity.route')
 const charityProjectroute=require('./routes/charityProject.route')
 const donationRoute=require('./routes/donation.route')
+const adminRoute=require('./routes/admin.route')
 const cors=require('cors')
 
 
@@ -22,7 +23,7 @@ app.use('/api/auth',authroute)
 app.use('/api/charities',charityroute)
 app.use('/api/charities/projects',charityProjectroute)
 app.use('/api/charities',donationRoute)
-
+app.use('/api/admin',adminRoute)
 
 app.use((req,res,next)=>{
     const err=new Error("Page not found")

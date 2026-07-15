@@ -75,6 +75,10 @@ const User = sequelize.define('user', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    reason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 
 },
     {
