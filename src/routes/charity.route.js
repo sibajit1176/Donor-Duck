@@ -8,6 +8,7 @@ route.post('/editcharityProfile',authMiddleware,charityController.editcharitypro
 route.get('/deletecharityProfile',authMiddleware,charityController.deletecharityprofileController)
 route.get('/getAllCharity',charityController.getAllCharityController)
 route.get('/getcharityProfileAllDetails',authMiddleware,charityController.getCharityProfilfullDetailseController)
+route.get("/getCharityProfileDetailsforAllUser/:id",charityController.getcharityprofileforAllUserController);
 
 
 module.exports=route

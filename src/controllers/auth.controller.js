@@ -83,11 +83,128 @@ const editProfileDetailsController = async (req, res, next) => {
     }
 };
 
+const forgotPasswordController = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        const result = await authService.forgotPasswordService(email);
+        
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const verifyOtpController = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const result =
+            await authService.verifyOtpService(
+                req.body
+            );
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
+const resetPasswordController = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const result =
+            await authService.resetPasswordService(
+                req.body
+            );
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
+const verifyEmailOtpController = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        const result = await authService.verifyEmailOtp(email);
+        
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const verifyOtpemail = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const result =
+            await authService.verifyEmailService(
+                req.body
+            );
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
+const changePasswordController=async(req,res,next)=>{
+    try {
+        const id=req.user.id
+        const response=await authService.changePassword({id,...req.body})
+        res.status(200).json(response)
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports={
     registerController,
     logincontroller,
     refreshTokenController,
     logoutController,
     getProfileDetailsController,
-    editProfileDetailsController
+    editProfileDetailsController,
+    forgotPasswordController,
+    verifyOtpController,
+    resetPasswordController,
+    verifyEmailOtpController,
+    verifyOtpemail,
+    changePasswordController
 }

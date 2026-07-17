@@ -9,6 +9,6 @@ route.get('/getAllUsers',authMiddleware,adminmiddleware,admincontroller.getAllUs
 route.post('/ApproveCharity',authMiddleware,adminmiddleware,admincontroller.CharityApprovalController)
 route.post('/BlockUser',authMiddleware,adminmiddleware,admincontroller.blockUserController)
 route.get('/adminDashBoard',authMiddleware,adminmiddleware,admincontroller.adminDashBoardController)
-
+route.get('/donationManagement',authMiddleware,adminmiddleware,admincontroller.donationManagementController)
 
 module.exports=route

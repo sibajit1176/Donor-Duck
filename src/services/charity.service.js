@@ -297,6 +297,266 @@ const getCharityProfilfullDetailseService = async (userId) => {
 
 };
 
+const getCharityProfileServiceForAllUser = async (id) => {
+
+    const charity = await Charity.findOne({
+
+        where: { id },
+
+        include: [
+            {
+                model: User,
+                as: "user",
+                attributes: [
+                    "id",
+                    "name",
+                    "email",
+                ],
+            },
+        ],
+
+    });
+
+    if (!charity) {
+
+        const err = new Error("Charity profile not found.");
+        err.statusCode = 404;
+        throw err;
+
+    }
+
+    const [
+
+        totalProjects,
+
+        activeProjects,
+
+        totalDonors,
+
+        totalRaised,
+
+        projects,
+
+        donations,
+
+    ] = await Promise.all([
+
+        CharityProject.count({
+
+            where: {
+                charityId: id,
+            },
+
+        }),
+
+        CharityProject.count({
+
+            where: {
+                charityId: id,
+                status: "ACTIVE",
+            },
+
+        }),
+
+        Donation.count({
+
+            where: {
+                charityId: id,
+                status: "SUCCESS",
+            },
+
+            distinct: true,
+            col: "userId",
+
+        }),
+
+        Donation.sum("amount", {
+
+            where: {
+                charityId: id,
+                status: "SUCCESS",
+            },
+
+        }),
+
+        CharityProject.findAll({
+
+            where: {
+                charityId: id,
+            },
+
+            attributes: [
+                "id",
+                "title",
+                "description",
+                "goalAmount",
+                "coverImage",
+                "status",
+            ],
+
+            order: [
+                ["createdAt", "DESC"],
+            ],
+
+        }),
+
+        Donation.findAll({
+
+            where: {
+                charityId: id,
+                status: "SUCCESS",
+            },
+
+            include: [
+
+                {
+                    model: User,
+                    as: "user",
+                    attributes: [
+                        "name",
+                    ],
+                },
+
+                {
+                    model: CharityProject,
+                    as: "project",
+                    attributes: [
+                        "title",
+                    ],
+                },
+
+            ],
+
+            attributes: [
+                "id",
+                "amount",
+                "message",
+                "isAnonymous",
+                "createdAt",
+            ],
+
+            order: [
+                ["createdAt", "DESC"],
+            ],
+
+            limit: 10,
+
+        }),
+
+    ]);
+
+    const totalRaisedAmount = Number(totalRaised) || 0;
+
+    return {
+
+        message: "Charity details fetched successfully.",
+
+        charity: {
+
+            id: charity.id,
+
+            organizationName: charity.organizationName,
+
+            description: charity.description,
+
+            mission: charity.mission,
+
+            vision: charity.vision,
+
+            logo: charity.logo,
+
+            banner: charity.coverImage,
+
+            email: charity.user?.email,
+
+            phone: charity.phone,
+
+            website: charity.website,
+
+            address: [
+                charity.address,
+                charity.city,
+                charity.state,
+                charity.country,
+            ]
+                .filter(Boolean)
+                .join(", "),
+
+            registrationNumber: charity.registrationNumber,
+
+            foundedYear: new Date(charity.createdAt).getFullYear(),
+
+            isVerified:
+                charity.approvalStatus === "APPROVED",
+
+        },
+
+        statistics: {
+
+            totalProjects,
+
+            activeProjects,
+
+            totalDonors,
+
+            totalRaised: totalRaisedAmount,
+
+            goalAmount: Number(charity.goalAmount) || 0,
+
+            progressPercentage:
+                charity.goalAmount > 0
+                    ? Number(
+                          (
+                              (totalRaisedAmount /
+                                  Number(charity.goalAmount)) *
+                              100
+                          ).toFixed(2)
+                      )
+                    : 0,
+
+        },
+
+        projects: projects.map((project) => ({
+
+            id: project.id,
+
+            title: project.title,
+
+            description: project.description,
+
+            goalAmount: Number(project.goalAmount),
+
+            raisedAmount: totalRaisedAmount,
+
+            image: project.coverImage,
+
+            status: project.status,
+
+        })),
+
+        donations: donations.map((donation) => ({
+
+            id: donation.id,
+
+            donorName: donation.isAnonymous
+                ? "Anonymous"
+                : donation.user?.name,
+
+            amount: Number(donation.amount),
+
+            projectName:
+                donation.project?.title,
+
+            message: donation.message,
+
+            createdAt: donation.createdAt,
+
+        })),
+
+    };
+
+};
+
 
 module.exports = {
     registercharityService,
@@ -304,5 +564,6 @@ module.exports = {
     editCharityProfileService,
     deleteCharityProfileService,
     getAllCharityService,
-    getCharityProfilfullDetailseService
+    getCharityProfilfullDetailseService,
+    getCharityProfileServiceForAllUser
 }
