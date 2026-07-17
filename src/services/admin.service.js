@@ -3,6 +3,8 @@ const Donation = require("../models/donationhitoryTable");
 const Charity = require("../models/charity");
 const User = require("../models/user");
 const { Op, fn, col, Sequelize } = require("sequelize");
+const sequelize = require("../config/database");
+
 
 const getAllCharity = async () => {
     const charities = await Charity.findAll({
@@ -47,7 +49,6 @@ const getAllUsers = async () => {
 };
 
 const updateCharityStatus = async (payload) => {
-
     const {
         id,
         approvedBy,
@@ -55,38 +56,80 @@ const updateCharityStatus = async (payload) => {
         rejectionReason,
     } = payload;
 
-    const charity = await Charity.findByPk(id);
-
-    if (!charity) {
-        const error = new Error("Charity not found.");
-        error.statusCode = 404;
-        throw error;
-    }
-
     if (!["APPROVED", "REJECTED"].includes(approvalStatus)) {
         const error = new Error("Invalid approval status.");
         error.statusCode = 400;
         throw error;
     }
 
-    await charity.update({
-        approvalStatus,
-        approvedBy,
-        approvedAt: new Date(),
-        rejectionReason:
-            approvalStatus === "REJECTED"
-                ? rejectionReason
-                : null,
-    });
+    if (
+        approvalStatus === "REJECTED" &&
+        (!rejectionReason || !rejectionReason.trim())
+    ) {
+        const error = new Error(
+            "Rejection reason is required."
+        );
+        error.statusCode = 400;
+        throw error;
+    }
 
-    return {
-        message: `Charity ${approvalStatus.toLowerCase()} successfully.`,
-    };
+    const transaction = await sequelize.transaction();
+
+    try {
+        const charity = await Charity.findByPk(id, {
+            transaction,
+        });
+
+        if (!charity) {
+            const error = new Error("Charity not found.");
+            error.statusCode = 404;
+            throw error;
+        }
+
+        await charity.update(
+            {
+                approvalStatus,
+                approvedBy,
+                approvedAt: new Date(),
+                rejectionReason:
+                    approvalStatus === "REJECTED"
+                        ? rejectionReason
+                        : null,
+            },
+            { transaction }
+        );
+
+        await User.update(
+            {
+                role:
+                    approvalStatus === "APPROVED"
+                        ? "CHARITY"
+                        : "USER",
+            },
+            {
+                where: {
+                    id: charity.userId,
+                },
+                transaction,
+            }
+        );
+
+        await transaction.commit();
+
+        return {
+            success: true,
+            message: `Charity ${approvalStatus.toLowerCase()} successfully.`,
+            charity,
+        };
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
 };
 
 const blockUser = async (payload) => {
 
-    const { id, status ,reason} = payload;
+    const { id, status, reason } = payload;
 
     const user = await User.findByPk(id);
 
@@ -207,6 +250,11 @@ const adminDashBoardService = async () => {
                     as: "charity",
                     attributes: ["organizationName"],
                 },
+                {
+                    model: CharityProject,
+                    as: "project",
+                    attributes: ["title"],
+                },
             ],
             attributes: [
                 "id",
@@ -216,7 +264,6 @@ const adminDashBoardService = async () => {
                 "createdAt",
             ],
         }),
-
         // ================= Recent Users =================
 
         User.findAll({
@@ -308,13 +355,13 @@ const adminDashBoardService = async () => {
         recentDonations: recentDonations.map((item) => ({
             id: item.id,
             orderId: item.orderId,
-            donorName: item.user.name,
-            organizationName: item.charity.organizationName,
+            donorName: item.user?.name,
+            organizationName: item.charity?.organizationName,
+            projectName: item.project?.title,
             amount: Number(item.amount),
             status: item.status,
             createdAt: item.createdAt,
         })),
-
         recentUsers,
 
         pendingCharities,
@@ -322,10 +369,144 @@ const adminDashBoardService = async () => {
     };
 };
 
-module.exports={
+const showAllDonation = async () => {
+
+    const [
+        donationHistory,
+        totalDonations,
+        totalAmount,
+        success,
+        pending,
+        failed,
+        refunded,
+    ] = await Promise.all([
+
+        Donation.findAll({
+
+            include: [
+
+                {
+                    model: User,
+                    as: "user",
+                    attributes: [
+                        "id",
+                        "name",
+                        "email",
+                    ],
+                },
+
+                {
+                    model: Charity,
+                    as: "charity",
+                    attributes: [
+                        "id",
+                        "organizationName",
+                    ],
+                },
+
+                {
+                    model: CharityProject,
+                    as: "project",
+                    attributes: [
+                        "id",
+                        "title",
+                    ],
+                },
+
+            ],
+
+            order: [["createdAt", "DESC"]],
+
+        }),
+
+        Donation.count(),
+
+        Donation.sum("amount", {
+            where: {
+                status: "SUCCESS",
+            },
+        }),
+
+        Donation.count({
+            where: {
+                status: "SUCCESS",
+            },
+        }),
+
+        Donation.count({
+            where: {
+                status: "PENDING",
+            },
+        }),
+
+        Donation.count({
+            where: {
+                status: "FAILED",
+            },
+        }),
+
+        Donation.count({
+            where: {
+                status: "REFUNDED",
+            },
+        }),
+
+    ]);
+
+    return {
+
+        statistics: {
+
+            totalDonations,
+
+            totalAmount: Number(totalAmount) || 0,
+
+            success,
+
+            pending,
+
+            failed,
+
+            refunded,
+
+        },
+
+        donations: donationHistory.map((item) => ({
+
+            id: item.id,
+
+            orderId: item.orderId,
+
+            donorName: item.user?.name,
+
+            donorEmail: item.user?.email,
+
+            organizationName:
+                item.charity?.organizationName,
+
+            projectName:
+                item.project?.title,
+
+            amount: Number(item.amount),
+
+            message: item.message,
+
+            isAnonymous: item.isAnonymous,
+
+            status: item.status,
+
+            createdAt: item.createdAt,
+
+        })),
+
+    };
+
+};
+module.exports = {
     blockUser,
     updateCharityStatus,
     getAllUsers,
     getAllCharity,
-    adminDashBoardService
+    adminDashBoardService,
+    showAllDonation
 }

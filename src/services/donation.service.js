@@ -5,6 +5,9 @@ const Charity = require("../models/charity");
 const CharityProject = require("../models/charityProject");
 const Donation = require("../models/donationhitoryTable");
 const User = require("../models/user");
+const transporter = require("../config/nodemailer");
+const paymentTemplate = require("../utils/emailTemplate");
+
 
 const createDonationService = async (payload) => {
     const transaction = await sequelize.transaction();
@@ -103,7 +106,7 @@ const verifyPaymentService = async (payload) => {
         const donation = await Donation.findOne({
             where: {
                 orderId,
-                
+
             },
             include: [
                 {
@@ -119,7 +122,7 @@ const verifyPaymentService = async (payload) => {
                 {
                     model: User,
                     as: "user",
-                    attributes: ["name"],
+                    attributes: ["name", "email"],
                 },
             ],
             transaction,
@@ -182,9 +185,6 @@ const verifyPaymentService = async (payload) => {
                 donation.charityId,
                 { transaction }
             );
-
-
-
             await charity.update(
                 {
                     currentAmount:
@@ -193,6 +193,24 @@ const verifyPaymentService = async (payload) => {
                 },
                 { transaction }
             );
+            await transporter.sendMail({
+
+                from: process.env.MAIL_USER,
+
+                to: donation.user.email,
+
+                subject: "Payment details",
+
+                html: paymentTemplate.paymentSuccessTemplate(
+                    donation.user.name,
+                    donation.amount,
+                    charity.organizationName,
+                    project.title,
+                    orderId,
+                    donation.updatedAt
+                ),
+
+            });
         }
 
 

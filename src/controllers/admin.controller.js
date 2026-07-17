@@ -59,10 +59,21 @@ const adminDashBoardController=async(req,res,next)=>{
     }
 }
 
+const donationManagementController=async(req,res,next)=>{
+    try {
+        const response=await adminService.showAllDonation()
+        res.status(200).send(response)
+    } catch (error) {
+      next(error)        
+    }
+}
+
+
 module.exports={
     blockUserController,
     CharityApprovalController,
     getAllCharityController,
     getAllUserController,
-    adminDashBoardController
+    adminDashBoardController,
+    donationManagementController
 }
