@@ -280,11 +280,48 @@ const getAllProjectsService = async () => {
     };
 };
 
+const uploadProjectCoverImageService = async (payload) => {
+
+    const {
+        userId,
+        coverImage,
+        projectId
+    } = payload;
+
+    const charityProfile = await Charity.findOne({
+        where: { userId }
+    });
+
+    if (!charityProfile) {
+        const err = new Error("Charity profile not found.");
+        err.statusCode = 404;
+        throw err;
+    }
+
+    const project = await CharityProject.findOne({
+        where: {
+            id: projectId,
+            charityId: charityProfile.id,
+        },
+    });
+
+    await project.update({
+        coverImage,
+    });
+
+    return {
+        success: true,
+        message: "Image updated successfully.",
+        coverImage,
+    };
+};
+
 module.exports={
     createcharityProjectService,
     editCharityProjectService,
     getAllCharityProjectService,
     getCharityProjectbyIdService,
     deleteCharityProjectbyIdService,
-    getAllProjectsService
+    getAllProjectsService,
+    uploadProjectCoverImageService
 }

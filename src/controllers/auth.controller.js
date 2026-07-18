@@ -194,6 +194,32 @@ const changePasswordController=async(req,res,next)=>{
     }
 }
 
+const uploadProfileImageController = async (req,res,next) => {
+
+    try {
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Please upload an image.",
+            });
+        }
+
+        const result = await authService.uploadPhotoService({
+            userId: req.user.id,
+            profileImage: req.file.path,
+        });
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
 module.exports={
     registerController,
     logincontroller,
@@ -206,5 +232,6 @@ module.exports={
     resetPasswordController,
     verifyEmailOtpController,
     verifyOtpemail,
-    changePasswordController
+    changePasswordController,
+    uploadProfileImageController
 }

@@ -68,6 +68,45 @@ const donationManagementController=async(req,res,next)=>{
     }
 }
 
+const adminotpController = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        const result = await adminService.adminPermisssonOtpSent(email);
+        
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const adminverifyOtpController = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const result =
+            await adminService.AdminverifyOtpService(
+                req.body
+            );
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
 
 module.exports={
     blockUserController,
@@ -75,5 +114,7 @@ module.exports={
     getAllCharityController,
     getAllUserController,
     adminDashBoardController,
-    donationManagementController
+    donationManagementController,
+    adminotpController,
+    adminverifyOtpController
 }

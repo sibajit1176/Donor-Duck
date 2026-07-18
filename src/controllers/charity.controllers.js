@@ -75,6 +75,59 @@ const getcharityprofileforAllUserController = async (req, res, next) => {
     }
 }
 
+const uploadCharityLogoController = async (req,res,next) => {
+
+    try {
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Please upload an image.",
+            });
+        }
+
+        const result = await charityService.uploadCharitylogoService({
+            userId: req.user.id,
+            logo: req.file.path,
+        });
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
+const uploadCharityCoverImageController = async (req,res,next) => {
+
+    try {
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Please upload an image.",
+            });
+        }
+
+        const result = await charityService.uploadCharityCoverImageService({
+            userId: req.user.id,
+            coverImage: req.file.path,
+        });
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
+
 module.exports = {
     registercharityControler,
     getcharityprofileController,
@@ -82,5 +135,7 @@ module.exports = {
     deletecharityprofileController,
     getAllCharityController,
     getCharityProfilfullDetailseController,
-    getcharityprofileforAllUserController
+    getcharityprofileforAllUserController,
+    uploadCharityCoverImageController,
+    uploadCharityLogoController
 }
