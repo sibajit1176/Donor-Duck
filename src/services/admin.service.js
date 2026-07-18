@@ -4,6 +4,10 @@ const Charity = require("../models/charity");
 const User = require("../models/user");
 const { Op, fn, col, Sequelize } = require("sequelize");
 const sequelize = require("../config/database");
+const adminmtemplate = require("../utils/emailTemplate");
+const transporter = require("../config/nodemailer");
+const redisClient = require("../config/redis");
+
 
 
 const getAllCharity = async () => {
@@ -98,21 +102,29 @@ const updateCharityStatus = async (payload) => {
             },
             { transaction }
         );
+        const user = await User.findByPk(charity.userId, {
+            transaction,
+        });
 
-        await User.update(
-            {
-                role:
-                    approvalStatus === "APPROVED"
-                        ? "CHARITY"
-                        : "USER",
-            },
-            {
-                where: {
-                    id: charity.userId,
+        if (!user) {
+            const error = new Error("User not found.");
+            error.statusCode = 404;
+            throw error;
+        }
+
+        if (user.role !== "ADMIN") {
+            await user.update(
+                {
+                    role:
+                        approvalStatus === "APPROVED"
+                            ? "CHARITY"
+                            : "USER",
                 },
-                transaction,
-            }
-        );
+                {
+                    transaction,
+                }
+            );
+        }
 
         await transaction.commit();
 
@@ -502,11 +514,147 @@ const showAllDonation = async () => {
     };
 
 };
+
+const adminPermisssonOtpSent = async (email) => {
+
+    const user = await User.findOne({
+        where: {
+            email,
+        },
+    });
+
+    if (!user) {
+        const error = new Error("User not found.");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const otp = Math.floor(
+        100000 + Math.random() * 900000
+    ).toString();
+
+    await redisClient.set(
+        `SuperadminSignature:${email}`,
+        otp,
+        {
+            EX: 600, // 10 minutes
+        }
+    );
+
+    await transporter.sendMail({
+        from: process.env.MAIL_USER,
+        to: email,
+        subject: "Admin Permission Verification",
+        html: adminmtemplate.adminPermissionTemplate(
+            user.name,
+            otp
+        ),
+    });
+
+    return {
+        message: "OTP sent successfully to the Super Admin.",
+    };
+};
+
+const AdminverifyOtpService = async (payload) => {
+
+    const {
+        email,
+        otp,
+    } = payload;
+
+    if (!email || !otp) {
+
+        const error = new Error(
+            "Email and OTP are required."
+        );
+
+        error.statusCode = 400;
+
+        throw error;
+
+    }
+
+    const user = await User.findOne({
+        where: {
+            email,
+        },
+    });
+
+    if (!user) {
+
+        const error = new Error(
+            "User not found."
+        );
+
+        error.statusCode = 404;
+
+        throw error;
+
+    }
+
+    const savedOtp =
+        await redisClient.get(
+            `SuperadminSignature:${email}`
+        );
+
+    if (!savedOtp) {
+
+        const error = new Error(
+            "OTP expired. Please request a new OTP."
+        );
+
+        error.statusCode = 400;
+
+        throw error;
+
+    }
+
+    if (savedOtp !== otp) {
+
+        const error = new Error(
+            "Invalid OTP."
+        );
+
+        error.statusCode = 400;
+
+        throw error;
+
+    }
+
+    await redisClient.del(
+        `SuperadminSignature:${email}`
+    );
+
+    await redisClient.set(
+        `SuperadminSignature:${email}`,
+        "verified",
+        {
+            EX: 600,
+        }
+    );
+
+    await user.update({
+        role:"ADMIN"
+    })
+
+    return {
+
+        success: true,
+
+        message:
+            "Permission Granted",
+
+    };
+
+};
 module.exports = {
     blockUser,
     updateCharityStatus,
     getAllUsers,
     getAllCharity,
     adminDashBoardService,
-    showAllDonation
+    showAllDonation,
+    adminPermisssonOtpSent,
+    AdminverifyOtpService
 }

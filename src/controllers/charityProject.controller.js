@@ -64,11 +64,39 @@ const getDataForProjectpage = async (req, res, next) => {
     }
 }
 
+const uploadProjectCoverImageController = async (req, res, next) => {
+
+    try {
+           
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Please upload an image.",
+            });
+        }
+        const { projectId } = req.params;
+        const result = await charityProjectService.uploadProjectCoverImageService({
+            userId: req.user.id,
+            coverImage: req.file.path,
+            projectId
+        });
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
 module.exports = {
     createProjectController,
     editProjectController,
     getAllProjectController,
     getProjectByIdController,
     deleteProjectByIdController,
-    getDataForProjectpage
+    getDataForProjectpage,
+    uploadProjectCoverImageController
 };

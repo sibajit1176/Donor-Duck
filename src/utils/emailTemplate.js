@@ -740,4 +740,266 @@ const paymentSuccessTemplate = (
 </html>
 `;
 
-module.exports = {forgotPasswordTemplate,verifyEmailTemplate,paymentSuccessTemplate}
+const adminPermissionTemplate = (name, otp) => `
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+</head>
+
+<body
+    style="
+        margin:0;
+        padding:40px 0;
+        background:#f4f7fb;
+        font-family:Arial, Helvetica, sans-serif;
+    "
+>
+
+    <table
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+    >
+
+        <tr>
+
+            <td align="center">
+
+                <table
+                    width="600"
+                    cellpadding="0"
+                    cellspacing="0"
+                    style="
+                        background:#ffffff;
+                        border-radius:16px;
+                        overflow:hidden;
+                        box-shadow:0 10px 30px rgba(0,0,0,0.08);
+                    "
+                >
+
+                    <!-- Header -->
+
+                    <tr>
+
+                        <td
+                            align="center"
+                            style="
+                                background:linear-gradient(90deg,#16a34a,#059669);
+                                padding:35px;
+                                color:#ffffff;
+                            "
+                        >
+
+                            <h1
+                                style="
+                                    margin:0;
+                                    font-size:28px;
+                                "
+                            >
+
+                                Admin Permission Verification
+
+                            </h1>
+
+                            <p
+                                style="
+                                    margin-top:10px;
+                                    opacity:.9;
+                                "
+                            >
+
+                                Verify your identity to continue
+
+                            </p>
+
+                        </td>
+
+                    </tr>
+
+                    <!-- Body -->
+
+                    <tr>
+
+                        <td
+                            style="
+                                padding:40px;
+                                color:#374151;
+                            "
+                        >
+
+                            <h2 style="margin-top:0;">
+
+                                Hello ${name},
+
+                            </h2>
+
+                            <p
+                                style="
+                                    font-size:16px;
+                                    line-height:28px;
+                                "
+                            >
+
+                                We received a request to grant your account
+                                <strong>Administrator Permission</strong> on the
+                                Charity Donation Platform.
+
+                                To continue, please verify your identity using
+                                the One-Time Password (OTP) below.
+
+                            </p>
+
+                            <!-- OTP -->
+
+                            <div
+                                style="
+                                    margin:35px 0;
+                                    text-align:center;
+                                "
+                            >
+
+                                <div
+                                    style="
+                                        display:inline-block;
+                                        padding:18px 35px;
+                                        background:#ecfdf5;
+                                        border:2px dashed #16a34a;
+                                        border-radius:14px;
+                                        font-size:36px;
+                                        font-weight:bold;
+                                        letter-spacing:10px;
+                                        color:#16a34a;
+                                    "
+                                >
+
+                                    ${otp}
+
+                                </div>
+
+                            </div>
+
+                            <p
+                                style="
+                                    font-size:15px;
+                                    line-height:26px;
+                                "
+                            >
+
+                                This OTP will expire in
+                                <strong>10 minutes</strong> and can only be used
+                                once.
+
+                            </p>
+
+                            <div
+                                style="
+                                    margin-top:30px;
+                                    padding:18px;
+                                    border-radius:10px;
+                                    background:#eff6ff;
+                                    border-left:5px solid #2563eb;
+                                "
+                            >
+
+                                <strong>
+
+                                    Why am I receiving this?
+
+                                </strong>
+
+                                <p
+                                    style="
+                                        margin:10px 0 0;
+                                        line-height:24px;
+                                        font-size:14px;
+                                    "
+                                >
+
+                                    This verification is required before
+                                    Administrator privileges can be assigned to
+                                    your account. Only verified users can obtain
+                                    admin access.
+
+                                </p>
+
+                            </div>
+
+                            <div
+                                style="
+                                    margin-top:20px;
+                                    padding:18px;
+                                    border-radius:10px;
+                                    background:#fff7ed;
+                                    border-left:5px solid #f59e0b;
+                                "
+                            >
+
+                                <strong>
+
+                                    Security Notice
+
+                                </strong>
+
+                                <p
+                                    style="
+                                        margin:10px 0 0;
+                                        line-height:24px;
+                                        font-size:14px;
+                                    "
+                                >
+
+                                    Never share this OTP with anyone.
+                                    Our team will never ask for your OTP.
+                                    If you did not request administrator access,
+                                    please ignore this email.
+
+                                </p>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    <!-- Footer -->
+
+                    <tr>
+
+                        <td
+                            align="center"
+                            style="
+                                background:#f9fafb;
+                                padding:25px;
+                                color:#6b7280;
+                                font-size:13px;
+                            "
+                        >
+
+                            This is an automated email from the
+                            <strong>Charity Donation Platform</strong>.
+
+                            <br /><br />
+
+                            © 2026 Charity Donation Platform.
+                            All rights reserved.
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+</body>
+
+</html>
+`;
+
+module.exports = {forgotPasswordTemplate,verifyEmailTemplate,paymentSuccessTemplate,adminPermissionTemplate}

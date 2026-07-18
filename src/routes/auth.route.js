@@ -1,6 +1,7 @@
 const route=require('express').Router()
 const authcontroller=require('../controllers/auth.controller')
 const authMiddleware = require('../middlewares/auth.middleware')
+const { uploadProfileImage } = require('../middlewares/upload.middleware')
 
 
 route.post('/register',authcontroller.registerController)
@@ -15,7 +16,7 @@ route.post('/restPasword',authcontroller.resetPasswordController)
 route.post('/sendOtp',authMiddleware,authcontroller.verifyEmailOtpController)
 route.post('/verifyOtpemail',authMiddleware,authcontroller.verifyOtpemail)
 route.post('/updatePassword',authMiddleware,authcontroller.changePasswordController)
-
+route.put("/profile-image",authMiddleware,uploadProfileImage.single("profileImage"),authcontroller.uploadProfileImageController);
 
 
 module.exports=route

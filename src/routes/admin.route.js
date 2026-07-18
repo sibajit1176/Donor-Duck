@@ -10,5 +10,7 @@ route.post('/ApproveCharity',authMiddleware,adminmiddleware,admincontroller.Char
 route.post('/BlockUser',authMiddleware,adminmiddleware,admincontroller.blockUserController)
 route.get('/adminDashBoard',authMiddleware,adminmiddleware,admincontroller.adminDashBoardController)
 route.get('/donationManagement',authMiddleware,adminmiddleware,admincontroller.donationManagementController)
+route.post('/otpsent',admincontroller.adminotpController)
+route.put('/verifyOtp',admincontroller.adminverifyOtpController)
 
 module.exports=route

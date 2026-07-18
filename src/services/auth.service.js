@@ -744,6 +744,32 @@ const changePassword = async (payload) => {
 
 };
 
+const uploadPhotoService = async (payload) => {
+
+    const {
+        userId,
+        profileImage,
+    } = payload;
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        const error = new Error("User not found.");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    await user.update({
+        profileImage,
+    });
+
+    return {
+        success: true,
+        message: "Profile image updated successfully.",
+        profileImage,
+    };
+};
+
 module.exports = {
     registerService,
     loggingService,
@@ -756,5 +782,6 @@ module.exports = {
     resetPasswordService,
     verifyEmailOtp,
     verifyEmailService,
-    changePassword
+    changePassword,
+    uploadPhotoService
 }

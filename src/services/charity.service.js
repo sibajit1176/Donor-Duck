@@ -146,6 +146,7 @@ const getAllCharityService = async () => {
             "organizationName",
             "category",
             "description",
+            "coverImage",
             [
                 fn("COUNT", col("projects.id")),
                 "totalProjects",
@@ -557,6 +558,62 @@ const getCharityProfileServiceForAllUser = async (id) => {
 
 };
 
+const uploadCharitylogoService = async (payload) => {
+
+    const {
+        userId,
+        logo,
+    } = payload;
+
+    const charityProfile = await Charity.findOne({
+        where: { userId }
+    });
+
+    if (!charityProfile) {
+        const err = new Error("Charity profile not found.");
+        err.statusCode = 404;
+        throw err;
+    }
+
+    await charityProfile.update({
+        logo,
+    });
+
+    return {
+        success: true,
+        message: "Logo updated successfully.",
+        logo,
+    };
+};
+
+const uploadCharityCoverImageService = async (payload) => {
+
+    const {
+        userId,
+        coverImage,
+    } = payload;
+
+    const charityProfile = await Charity.findOne({
+        where: { userId }
+    });
+
+    if (!charityProfile) {
+        const err = new Error("Charity profile not found.");
+        err.statusCode = 404;
+        throw err;
+    }
+
+    await charityProfile.update({
+        coverImage,
+    });
+
+    return {
+        success: true,
+        message: "Logo updated successfully.",
+        coverImage,
+    };
+};
+
 
 module.exports = {
     registercharityService,
@@ -565,5 +622,7 @@ module.exports = {
     deleteCharityProfileService,
     getAllCharityService,
     getCharityProfilfullDetailseService,
-    getCharityProfileServiceForAllUser
+    getCharityProfileServiceForAllUser,
+    uploadCharityCoverImageService,
+    uploadCharitylogoService
 }
