@@ -66,7 +66,6 @@ const getCharityProfilfullDetailseController = async (req, res, next) => {
 
 const getcharityprofileforAllUserController = async (req, res, next) => {
     try {
-           console.log(req.params,"====");
            const {id}=req.params
         const charity = await charityService.getCharityProfileServiceForAllUser(id)
         res.status(200).send(charity)

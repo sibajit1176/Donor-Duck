@@ -2,7 +2,7 @@ const Charity = require("../models/charity");
 const CharityProject = require("../models/charityProject");
 const Donation = require("../models/donationhitoryTable");
 const User = require("../models/user");
-const { fn, col,literal } = require("sequelize");
+const { fn, col,literal,Sequelize,Op } = require("sequelize");
 
 
 const registercharityService = async (payload) => {
@@ -334,50 +334,52 @@ const getCharityProfileServiceForAllUser = async (id) => {
 
         totalDonors,
 
+        totalDonations,
+
         totalRaised,
 
         projects,
 
         donations,
 
+        projectDonationTotals,
+
     ] = await Promise.all([
 
         CharityProject.count({
-
             where: {
                 charityId: id,
             },
-
         }),
 
         CharityProject.count({
-
             where: {
                 charityId: id,
                 status: "ACTIVE",
             },
-
         }),
 
         Donation.count({
-
             where: {
                 charityId: id,
                 status: "SUCCESS",
             },
-
             distinct: true,
             col: "userId",
+        }),
 
+        Donation.count({
+            where: {
+                charityId: id,
+                status: "SUCCESS",
+            },
         }),
 
         Donation.sum("amount", {
-
             where: {
                 charityId: id,
                 status: "SUCCESS",
             },
-
         }),
 
         CharityProject.findAll({
@@ -393,6 +395,7 @@ const getCharityProfileServiceForAllUser = async (id) => {
                 "goalAmount",
                 "coverImage",
                 "status",
+                "totalDonors"
             ],
 
             order: [
@@ -444,9 +447,42 @@ const getCharityProfileServiceForAllUser = async (id) => {
 
         }),
 
+        Donation.findAll({
+
+            where: {
+                charityId: id,
+                status: "SUCCESS",
+            },
+
+            attributes: [
+                "projectId",
+                [
+                    Sequelize.fn(
+                        "SUM",
+                        Sequelize.col("amount")
+                    ),
+                    "raisedAmount",
+                ],
+            ],
+
+            group: ["projectId"],
+
+            raw: true,
+
+        }),
+
     ]);
 
     const totalRaisedAmount = Number(totalRaised) || 0;
+
+    const raisedAmountMap = {};
+
+    projectDonationTotals.forEach((item) => {
+
+        raisedAmountMap[item.projectId] =
+            Number(item.raisedAmount) || 0;
+
+    });
 
     return {
 
@@ -483,9 +519,11 @@ const getCharityProfileServiceForAllUser = async (id) => {
                 .filter(Boolean)
                 .join(", "),
 
-            registrationNumber: charity.registrationNumber,
+            registrationNumber:
+                charity.registrationNumber,
 
-            foundedYear: new Date(charity.createdAt).getFullYear(),
+            foundedYear:
+                new Date(charity.createdAt).getFullYear(),
 
             isVerified:
                 charity.approvalStatus === "APPROVED",
@@ -500,16 +538,21 @@ const getCharityProfileServiceForAllUser = async (id) => {
 
             totalDonors,
 
+            totalDonations,
+
             totalRaised: totalRaisedAmount,
 
-            goalAmount: Number(charity.goalAmount) || 0,
+            goalAmount:
+                Number(charity.goalAmount) || 0,
 
             progressPercentage:
                 charity.goalAmount > 0
                     ? Number(
                           (
                               (totalRaisedAmount /
-                                  Number(charity.goalAmount)) *
+                                  Number(
+                                      charity.goalAmount
+                                  )) *
                               100
                           ).toFixed(2)
                       )
@@ -527,11 +570,14 @@ const getCharityProfileServiceForAllUser = async (id) => {
 
             goalAmount: Number(project.goalAmount),
 
-            raisedAmount: totalRaisedAmount,
+            raisedAmount:
+                raisedAmountMap[project.id] || 0,
 
             image: project.coverImage,
 
             status: project.status,
+
+            totalDonors:project.totalDonors
 
         })),
 
@@ -557,7 +603,6 @@ const getCharityProfileServiceForAllUser = async (id) => {
     };
 
 };
-
 const uploadCharitylogoService = async (payload) => {
 
     const {
