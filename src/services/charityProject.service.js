@@ -2,7 +2,7 @@ const Charity = require("../models/charity")
 const CharityProject = require("../models/charityProject");
 const Donation = require("../models/donationhitoryTable");
 const User = require("../models/user");
-const {Op}=require('sequelize')
+const {Op,fn,col}=require('sequelize')
 
 
 const createcharityProjectService = async (payload) => {
@@ -245,6 +245,7 @@ const deleteCharityProjectbyIdService = async (payload) => {
 };
 
 const getAllProjectsService = async () => {
+
     const projects = await CharityProject.findAll({
         where: {
             status: {
@@ -259,17 +260,34 @@ const getAllProjectsService = async () => {
             "coverImage",
             "totalDonors",
             "goalAmount",
+            [
+                fn("COALESCE", fn("SUM", col("donations.amount")), 0),
+                "raisedAmount",
+            ],
         ],
         include: [
             {
                 model: Charity,
-                as:"charity",
+                as: "charity",
                 attributes: [
                     "id",
                     "organizationName",
                     "logo",
                 ],
             },
+            {
+                model: Donation,
+                as: "donations",
+                attributes: [],
+                where: {
+                    status: "SUCCESS",
+                },
+                required: false,
+            },
+        ],
+        group: [
+            "CharityProject.id",
+            "charity.id",
         ],
         order: [["createdAt", "DESC"]],
     });
@@ -279,7 +297,6 @@ const getAllProjectsService = async () => {
         projects,
     };
 };
-
 const uploadProjectCoverImageService = async (payload) => {
 
     const {
